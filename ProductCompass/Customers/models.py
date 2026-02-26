@@ -26,7 +26,11 @@ class AdminDiv(MPTTModel):  # 继承MPTTModel，而非普通models.Model
         verbose_name_plural = '行政区划'
 
     def __str__(self):
-        return self.name
+        # return self.name
+
+        ancestors = self.get_ancestors(include_self=True)  # 获取所有祖先（包含自身）
+        # 拼接路径，用/分隔
+        return '/'.join([ancestor.name for ancestor in ancestors])
 
 
 class Customer(models.Model):

@@ -55,12 +55,12 @@ class CustomerAdmin(admin.ModelAdmin):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'admin_div':
             # 1. 指定自定义Widget（添加data-parent）
-            kwargs['widget'] = AdminDivTreeSelect()
+            # kwargs['widget'] = AdminDivTreeSelect()
 
             # 2. 按树形排序，下拉框显示带缩进的名称
             kwargs['queryset'] = AdminDiv.objects.all().order_by('tree_id', 'lft')
 
             # 3. 自定义选项文本（带层级缩进符）
-            kwargs['label_from_instance'] = lambda obj: f"{'—' * obj.level} {obj.name}"
+            # kwargs['label_from_instance'] = lambda obj: f"{'—' * obj.level} {obj.name}"
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)

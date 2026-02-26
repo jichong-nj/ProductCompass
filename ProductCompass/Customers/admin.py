@@ -38,6 +38,11 @@ class AdminDivAdmin(DraggableMPTTAdmin):
     def show_level(self, obj):
         return obj.level  # 调用mptt自动生成的level字段
     show_level.short_description = '层级'  # 自定义显示名称
+    
+    # 自定义indented_title字段的显示名称
+    def indented_title(self, obj):
+        return super().indented_title(obj)
+    indented_title.short_description = '名称'
 
 
 # 客户单位：应用带data-parent的树形下拉框

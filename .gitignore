@@ -87,3 +87,5 @@ logs/
 # 临时文件
 tmp/
 temp/
+ProductCompass/create_orgs_from_admin_div.py
+ProductCompass/import_admin_div.py

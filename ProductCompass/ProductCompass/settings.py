@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # 注册自定义应用
     'Products.apps.ProductsConfig',
+    # 新增Customers应用
+    'Customers',
 ]
 
 MIDDLEWARE = [

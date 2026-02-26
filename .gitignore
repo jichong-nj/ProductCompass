@@ -1,0 +1,89 @@
+# ========================== Python 通用忽略项 ==========================
+# 字节码文件
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 分发/打包
+*.egg-info/
+.eggs/
+dist/
+build/
+sdist/
+wheel/
+*.whl
+
+# 虚拟环境
+venv/
+env/
+ENV/
+*.env
+.venv/
+
+# 测试/覆盖率报告
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+.testmondata
+
+# 开发工具
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store  # Mac系统文件
+*.log
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+
+# ========================== Django 项目专属 ==========================
+# 本地设置（避免提交个性化配置）
+local_settings.py
+
+# Django 静态文件/媒体文件（生产环境收集后）
+static/
+media/
+
+# Django 数据库文件（SQLite）
+*.db
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+db.sqlite3-journal
+
+# Django 缓存/会话文件
+django_cache/
+django_session/
+
+# 迁移备份（可选，避免提交自动生成的迁移文件以外的备份）
+migrations/backup/
+
+# Django 调试工具
+debug.log
+*.pot
+
+# ========================== 项目特定（可选） ==========================
+# 环境变量文件（存放密钥、数据库配置等敏感信息）
+.env
+.env.local
+.env.dev
+.env.prod
+
+# 日志文件
+logs/
+*.log
+
+# 临时文件
+tmp/
+temp/

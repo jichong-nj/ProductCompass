@@ -34,6 +34,7 @@ class AdminDivAdmin(DraggableMPTTAdmin):
     )
     readonly_fields = ['created_at', 'updated_at']  # level不在其中（mptt自动维护，无需手动只读）
     mptt_level_indent = 20
+    list_per_page = 20
 
 
     # 自定义只读字段，展示level值
@@ -58,6 +59,7 @@ class CustomerAdmin(admin.ModelAdmin):
         ('时间信息', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}),
     )
     readonly_fields = ['created_at', 'updated_at']
+    list_per_page = 20
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == 'admin_div':
@@ -89,3 +91,4 @@ class CustomerProductAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ('created_at', 'updated_at')
+    list_per_page = 20

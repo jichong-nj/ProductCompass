@@ -44,6 +44,7 @@ class Customer(models.Model):
         related_name='customers',
         verbose_name='所属行政区划'
     )
+    intro = models.TextField(verbose_name='客户简介', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
 

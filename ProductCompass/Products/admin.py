@@ -11,7 +11,6 @@ class ProductComponentInline(admin.TabularInline):
     readonly_fields = ('created_at', 'updated_at')
 
 # 注册产品模型，并关联Inline组件
-@admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('product_name', 'product_type',  'created_at', 'updated_at')  # 列表页显示字段
     list_filter = ('product_type',)  # 列表页筛选条件
@@ -34,7 +33,6 @@ class ProductComponentAdmin(admin.ModelAdmin):
     search_fields = ('component_name', 'component_description', 'product__product_name')
     readonly_fields = ('created_at', 'updated_at')
 
-@admin.register(Vendor)
 class VendorAdmin(admin.ModelAdmin):
     list_display = ('name', 'created_at', 'updated_at')
     search_fields = ('name', 'remark')
@@ -49,7 +47,6 @@ class VendorAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('created_at', 'updated_at')
 
-@admin.register(ProductModel)
 class ProductModelAdmin(admin.ModelAdmin):
     list_display = ('product', 'model_name', 'created_at', 'updated_at')
     list_filter = ('product',)

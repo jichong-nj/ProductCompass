@@ -2,6 +2,9 @@ from django.contrib import admin
 from mptt.admin import DraggableMPTTAdmin  # MPTT自带的树形拖拽Admin
 from .models import AdminDiv, Customer, CustomerProduct
 from django import forms
+from django.urls import path
+from django.shortcuts import render
+from django.http import JsonResponse
 
 # 自定义Select Widget：为<option>添加data-parent属性
 class AdminDivTreeSelect(forms.Select):
@@ -21,7 +24,6 @@ class AdminDivTreeSelect(forms.Select):
         return option
 
 # 行政区划：树形展示+拖拽排序（原生MPTT功能，无需额外插件）
-@admin.register(AdminDiv)
 class AdminDivAdmin(DraggableMPTTAdmin):
     list_display = ['tree_actions', 'indented_title', 'level', 'created_at']  # list_display允许显示non-editable字段
     list_filter = ['level']  # 列表筛选也允许用level
@@ -49,13 +51,12 @@ class AdminDivAdmin(DraggableMPTTAdmin):
 
 
 # 客户单位：应用带data-parent的树形下拉框
-@admin.register(Customer)
 class CustomerAdmin(admin.ModelAdmin):
     list_display = ['name', 'admin_div', 'created_at']
     list_filter = ['admin_div__level', 'admin_div__parent']
     search_fields = ['name', 'admin_div__name']
     fieldsets = (
-        ('客户信息', {'fields': ('name', 'admin_div')}),
+        ('客户信息', {'fields': ('name', 'admin_div', 'intro')}),
         ('时间信息', {'fields': ('created_at', 'updated_at'), 'classes': ('collapse',)}),
     )
     readonly_fields = ['created_at', 'updated_at']
@@ -73,9 +74,82 @@ class CustomerAdmin(admin.ModelAdmin):
             # kwargs['label_from_instance'] = lambda obj: f"{'—' * obj.level} {obj.name}"
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('customer-profile/', self.admin_site.admin_view(self.customer_profile_view), name='customer_profile'),
+            path('api/admin-divs/', self.admin_site.admin_view(self.get_admin_divs), name='api_admin_divs'),
+            path('api/customer/<int:customer_id>/', self.admin_site.admin_view(self.get_customer_info), name='api_customer_info'),
+        ]
+        return custom_urls + urls
+    
+    def customer_profile_view(self, request):
+        from django.shortcuts import render
+        return render(request, 'admin/customers/customer_profile.html')
+    
+    def get_admin_divs(self, request):
+        from django.http import JsonResponse
+        # 获取所有行政区划，按树形结构组织
+        admin_divs = []
+        
+        def build_tree(node):
+            item = {
+                'id': node.id,
+                'name': node.name,
+                'children': []
+            }
+            # 添加该行政区划下的客户
+            for customer in node.customers.all():
+                item['children'].append({
+                    'id': f'customer_{customer.id}',
+                    'name': customer.name,
+                    'is_customer': True,
+                    'customer_id': customer.id
+                })
+            # 递归处理子行政区划
+            for child in node.children.all():
+                item['children'].append(build_tree(child))
+            return item
+        
+        # 从根节点开始构建
+        for root in AdminDiv.objects.filter(parent__isnull=True):
+            admin_divs.append(build_tree(root))
+        
+        return JsonResponse(admin_divs, safe=False)
+    
+    def get_customer_info(self, request, customer_id):
+        from django.http import JsonResponse
+        try:
+            customer = Customer.objects.get(id=customer_id)
+            # 客户基本信息
+            basic_info = {
+                'name': customer.name,
+                'admin_div': str(customer.admin_div),
+                'intro': customer.intro or '',
+                'created_at': customer.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'updated_at': customer.updated_at.strftime('%Y-%m-%d %H:%M:%S')
+            }
+            # 客户产品清单
+            products = []
+            for cp in customer.products.all():
+                products.append({
+                    'product_model': str(cp.product_model),
+                    'vendor': str(cp.vendor),
+                    'integrator': str(cp.integrator) if cp.integrator else '',
+                    'purchase_date': cp.purchase_date.strftime('%Y-%m-%d') if cp.purchase_date else '',
+                    'quantity': cp.quantity,
+                    'remark': cp.remark or ''
+                })
+            return JsonResponse({
+                'basic_info': basic_info,
+                'products': products
+            })
+        except Customer.DoesNotExist:
+            return JsonResponse({'error': '客户不存在'}, status=404)
 
 
-@admin.register(CustomerProduct)
 class CustomerProductAdmin(admin.ModelAdmin):
     list_display = ('customer', 'product_model', 'vendor', 'integrator', 'purchase_date', 'quantity', 'created_at', 'updated_at')
     list_filter = ('customer', 'vendor', 'integrator', 'purchase_date')
@@ -92,3 +166,50 @@ class CustomerProductAdmin(admin.ModelAdmin):
     )
     readonly_fields = ('created_at', 'updated_at')
     list_per_page = 20
+
+
+
+
+# 添加自定义菜单
+from django.contrib.admin import AdminSite
+
+# 扩展AdminSite类
+class CustomAdminSite(AdminSite):
+    def get_app_list(self, request):
+        app_list = super().get_app_list(request)
+        # 添加自定义菜单
+        custom_app = {
+            'name': '自定义功能',
+            'app_label': 'custom',
+            'models': [
+                {
+                    'name': '客户档案',
+                    'object_name': 'CustomerProfile',
+                    'perms': {'change': True},
+                    'admin_url': '/admin/Customers/customer/customer-profile/',
+                    'add_url': None
+                }
+            ]
+        }
+        app_list.insert(0, custom_app)
+        return app_list
+
+# 替换默认的admin site
+from django.contrib import admin
+admin.site = CustomAdminSite(name='admin')
+
+# 重新注册所有模型
+from .models import AdminDiv, Customer, CustomerProduct
+from Products.models import Vendor, Product, ProductComponent, ProductModel
+
+# 重新注册模型
+admin.site.register(AdminDiv, AdminDivAdmin)
+admin.site.register(Customer, CustomerAdmin)
+admin.site.register(CustomerProduct, CustomerProductAdmin)
+
+# 注册Products模型
+from Products.admin import VendorAdmin, ProductAdmin, ProductComponentAdmin, ProductModelAdmin
+admin.site.register(Vendor, VendorAdmin)
+admin.site.register(Product, ProductAdmin)
+admin.site.register(ProductComponent, ProductComponentAdmin)
+admin.site.register(ProductModel, ProductModelAdmin)

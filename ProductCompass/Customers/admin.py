@@ -1,6 +1,6 @@
 from django.contrib import admin
 from mptt.admin import DraggableMPTTAdmin  # MPTT自带的树形拖拽Admin
-from .models import AdminDiv, Customer
+from .models import AdminDiv, Customer, CustomerProduct
 from django import forms
 
 # 自定义Select Widget：为<option>添加data-parent属性
@@ -26,6 +26,7 @@ class AdminDivAdmin(DraggableMPTTAdmin):
     list_display = ['tree_actions', 'indented_title', 'level', 'created_at']  # list_display允许显示non-editable字段
     list_filter = ['level']  # 列表筛选也允许用level
     search_fields = ['name']
+    autocomplete_fields = ['parent']  # 添加自动完成功能，实现可输入可选择
     fieldsets = (
         # 移除fieldsets中的level字段（因为editable=False）
         ('基础信息', {'fields': ('name', 'parent')}),
@@ -33,6 +34,7 @@ class AdminDivAdmin(DraggableMPTTAdmin):
     )
     readonly_fields = ['created_at', 'updated_at']  # level不在其中（mptt自动维护，无需手动只读）
     mptt_level_indent = 20
+
 
     # 自定义只读字段，展示level值
     def show_level(self, obj):
@@ -69,3 +71,21 @@ class CustomerAdmin(admin.ModelAdmin):
             # kwargs['label_from_instance'] = lambda obj: f"{'—' * obj.level} {obj.name}"
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+
+@admin.register(CustomerProduct)
+class CustomerProductAdmin(admin.ModelAdmin):
+    list_display = ('customer', 'product_model', 'vendor', 'integrator', 'purchase_date', 'quantity', 'created_at', 'updated_at')
+    list_filter = ('customer', 'vendor', 'integrator', 'purchase_date')
+    search_fields = ('customer__name', 'product_model__model_name', 'product_model__product__product_name', 'vendor__name', 'integrator__name', 'remark')
+    autocomplete_fields = ('customer', 'product_model', 'vendor', 'integrator')
+    fieldsets = (
+        ('基本信息', {
+            'fields': ('customer', 'product_model', 'vendor', 'integrator', 'purchase_date', 'quantity', 'remark')
+        }),
+        ('时间信息', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ('created_at', 'updated_at')

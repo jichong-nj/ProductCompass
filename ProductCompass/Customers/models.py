@@ -55,3 +55,48 @@ class Customer(models.Model):
 
     def __str__(self):
         return f'{self.name}（{self.admin_div}）'
+
+
+class CustomerProduct(models.Model):
+    """客户产品采购信息模型"""
+    customer = models.ForeignKey(
+        Customer,
+        verbose_name='客户',
+        on_delete=models.CASCADE,
+        related_name='products'
+    )
+    product_model = models.ForeignKey(
+        'Products.ProductModel',
+        verbose_name='产品型号',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False
+    )
+    vendor = models.ForeignKey(
+        'Products.Vendor',
+        verbose_name='厂商',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=False
+    )
+    integrator = models.ForeignKey(
+        'Products.Vendor',
+        verbose_name='集成商',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='integrated_products'
+    )
+    purchase_date = models.DateField(verbose_name='采购时间', blank=True, null=True)
+    quantity = models.IntegerField(verbose_name='数量', default=1)
+    remark = models.TextField(verbose_name='备注', blank=True, null=True)
+    created_at = models.DateTimeField(verbose_name='创建时间', auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name='更新时间', auto_now=True)
+
+    class Meta:
+        verbose_name = '客户产品采购信息'
+        verbose_name_plural = '客户产品采购信息'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.customer.name} - {self.product_model} ({self.vendor.name})'

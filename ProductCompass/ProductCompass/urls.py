@@ -17,6 +17,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+# 修改admin界面标题
+admin.site.site_header = '客户档案'
+
 urlpatterns = [
     path('admin/', admin.site.urls),
 ]

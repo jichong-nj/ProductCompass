@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'Products.apps.ProductsConfig',
     # 新增Customers应用
     'Customers',
+    # Markdown编辑器
+    'markdownx',
 ]
 
 MIDDLEWARE = [

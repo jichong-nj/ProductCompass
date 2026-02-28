@@ -15,11 +15,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 # 修改admin界面标题
 admin.site.site_header = '产品罗盘'
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Markdown编辑器URL配置
+    path('markdownx/', include('markdownx.urls')),
 ]

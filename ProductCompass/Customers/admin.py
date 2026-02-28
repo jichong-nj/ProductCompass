@@ -5,6 +5,7 @@ from django import forms
 from django.urls import path
 from django.shortcuts import render
 from django.http import JsonResponse
+from markdownx.widgets import MarkdownxWidget  # 导入MarkdownxWidget
 
 # 自定义Select Widget：为<option>添加data-parent属性
 class AdminDivTreeSelect(forms.Select):
@@ -74,6 +75,26 @@ class CustomerAdmin(admin.ModelAdmin):
             # kwargs['label_from_instance'] = lambda obj: f"{'—' * obj.level} {obj.name}"
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        if db_field.name == 'intro':
+            # 配置MarkdownxWidget，设置固定高度和满宽
+            kwargs['widget'] = MarkdownxWidget(
+                attrs={
+                    'style': 'height: 300px; width: 100%; min-width: 100%; max-width: 100%; resize: none; overflow-y: auto;',
+                    'rows': 10,
+                    'cols': 100  # 设置初始行数
+                }
+            )
+        # 为文本字段设置更宽的宽度
+        elif db_field.name == 'name':
+            kwargs['widget'] = forms.TextInput(attrs={'style': 'width: 100%; min-width: 100%; max-width: 100%;'})
+        return super().formfield_for_dbfield(db_field, request, **kwargs)
+    
+    class Media:
+        css = {
+            'all': ('css/admin_custom.css',)
+        }
     
     def get_urls(self):
         from django.urls import path

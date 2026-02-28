@@ -3,6 +3,10 @@
 {% block title %}客户档案{% endblock %}
 
 {% block extrahead %}
+{{ block.super }}
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+<script src="{% static 'js/marked.min.js' %}"></script>
 <style>
     .customer-profile-container {
         display: flex;
@@ -10,7 +14,7 @@
     }
     
     .tree-sidebar {
-        width: 300px;
+        width: 350px;
         border-right: 1px solid #e0e0e0;
         overflow-y: auto;
         padding: 10px;
@@ -39,12 +43,12 @@
     }
     
     .tree-node.customer {
-        margin-left: 20px;
+        margin-left: 15px;
         font-style: italic;
     }
     
     .tree-children {
-        margin-left: 20px;
+        margin-left: 15px;
         display: none;
     }
     
@@ -102,7 +106,7 @@
     <div class="tree-sidebar">
         <h3>行政区划与客户</h3>
         <div class="search-container">
-            <input type="text" id="search-input" placeholder="搜索单位..." style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            <input type="text" id="search-input" placeholder="搜索单位..." style="width: 100%; padding: 10px 1px 10px 1px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
         </div>
         <div id="admin-div-tree">
             <!-- 树形结构将通过JavaScript动态生成 -->
@@ -167,6 +171,13 @@
     document.addEventListener('DOMContentLoaded', function() {
         // 加载行政区划树形结构
         loadAdminDivTree();
+        
+        // 添加搜索事件监听器
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            filterTreeNodes(searchTerm);
+        });
     });
     
     function loadAdminDivTree() {
@@ -238,6 +249,39 @@
         return div;
     }
     
+    function filterTreeNodes(searchTerm) {
+        const treeNodes = document.querySelectorAll('.tree-node');
+        
+        treeNodes.forEach(node => {
+            const nodeText = node.textContent.toLowerCase();
+            const isMatch = nodeText.includes(searchTerm);
+            
+            if (isMatch) {
+                // 显示匹配的节点
+                node.style.display = '';
+                
+                // 显示所有父节点
+                let parent = node.parentElement;
+                while (parent && parent.id !== 'admin-div-tree') {
+                    if (parent.classList.contains('tree-children')) {
+                        parent.style.display = '';
+                        // 展开父节点
+                        parent.classList.add('expanded');
+                        // 更新展开/折叠图标
+                        const toggle = parent.previousElementSibling.querySelector('.tree-toggle');
+                        if (toggle) {
+                            toggle.textContent = '▼';
+                        }
+                    }
+                    parent = parent.parentElement;
+                }
+            } else {
+                // 隐藏不匹配的节点
+                node.style.display = 'none';
+            }
+        });
+    }
+
     function loadCustomerInfo(customerId) {
         fetch(`/admin/Customers/customer/api/customer/${customerId}/`)
             .then(response => response.json())
@@ -249,7 +293,17 @@
                 // 填充基本信息
                 document.getElementById('customer-name').textContent = data.basic_info.name;
                 document.getElementById('customer-admin-div').textContent = data.basic_info.admin_div;
-                document.getElementById('customer-intro').textContent = data.basic_info.intro || '无';
+                // 使用marked.js渲染Markdown
+                const introContent = data.basic_info.intro || '无';
+                if (introContent === '无') {
+                    document.getElementById('customer-intro').textContent = '无';
+                } else {
+                    try {
+                        document.getElementById('customer-intro').innerHTML = window.marked ? window.marked(introContent) : introContent;
+                    } catch (e) {
+                        document.getElementById('customer-intro').textContent = introContent;
+                    }
+                }
                 document.getElementById('customer-created-at').textContent = data.basic_info.created_at;
                 document.getElementById('customer-updated-at').textContent = data.basic_info.updated_at;
                 

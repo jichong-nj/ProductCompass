@@ -1,5 +1,6 @@
 from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey  # 必须导入MPTTModel和TreeForeignKey
+from markdownx.models import MarkdownxField  # 导入MarkdownxField
 
 class AdminDiv(MPTTModel):  # 继承MPTTModel，而非普通models.Model
     name = models.CharField('行政区划名称', max_length=100, unique=True)
@@ -44,7 +45,7 @@ class Customer(models.Model):
         related_name='customers',
         verbose_name='所属行政区划'
     )
-    intro = models.TextField(verbose_name='客户简介', blank=True, null=True)
+    intro = MarkdownxField(verbose_name='客户简介', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
 
